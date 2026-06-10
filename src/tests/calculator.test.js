@@ -27,4 +27,25 @@ describe('Calculator core operations', () => {
     expect(calc.compute('*', 4, 6)).toBe(24);
     expect(calc.compute('div', 8, 2)).toBe(4);
   });
+
+  // New tests for extended operations
+  test('modulo: 5 % 2 => 1', () => {
+    expect(calc.mod(5, 2)).toBe(1);
+    expect(calc.compute('%', 5, 2)).toBe(1);
+  });
+
+  test('power: 2 ^ 3 => 8', () => {
+    expect(calc.pow(2, 3)).toBe(8);
+    expect(calc.power(3, 4)).toBe(81);
+    expect(calc.compute('pow', 2, 3)).toBe(8);
+  });
+
+  test('square root: sqrt(16) => 4', () => {
+    expect(calc.squareRoot(16)).toBe(4);
+    expect(calc.sqrt(9)).toBe(3);
+  });
+
+  test('square root of negative should throw', () => {
+    expect(() => calc.squareRoot(-4)).toThrow('Cannot take square root of negative number');
+  });
 });
