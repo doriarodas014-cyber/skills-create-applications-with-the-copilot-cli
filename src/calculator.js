@@ -15,7 +15,8 @@
 
 function printUsage() {
   console.error('Usage: node src/calculator.js <command> <num1> <num2>');
-  console.error('Commands: add, sub, mul, div (aliases supported).');
+  console.error('For unary commands (sqrt): node src/calculator.js sqrt <num>');
+  console.error('Commands: add, sub, mul, div, mod, pow, sqrt (aliases supported).');
 }
 
 function toNumber(value) {
@@ -23,22 +24,37 @@ function toNumber(value) {
   return Number.isFinite(n) ? n : NaN;
 }
 
+// New math helpers
+function modulo(a, b) {
+  if (b === 0) throw new Error('Modulo by zero');
+  return a % b;
+}
+
+function power(base, exponent) {
+  return Math.pow(base, exponent);
+}
+
+function squareRoot(n) {
+  if (n < 0) throw new Error('Cannot take square root of negative number');
+  return Math.sqrt(n);
+}
+
 const [, , command, aArg, bArg] = process.argv;
 
-if (!command || aArg === undefined || bArg === undefined) {
+if (!command) {
   printUsage();
   process.exit(1);
 }
 
-const a = toNumber(aArg);
-const b = toNumber(bArg);
+const op = command.toLowerCase();
 
-if (Number.isNaN(a) || Number.isNaN(b)) {
-  console.error('Error: both operands must be valid numbers.');
-  process.exit(1);
-}
+// Define unary (1-arg) and binary (2-arg) operations
+const unaryOps = {
+  sqrt: (x) => squareRoot(x),
+  '√': (x) => squareRoot(x)
+};
 
-const ops = {
+const binaryOps = {
   add: (x, y) => x + y,
   '+': (x, y) => x + y,
 
@@ -51,39 +67,63 @@ const ops = {
   '*': (x, y) => x * y,
 
   divide: (x, y) => {
-    if (y === 0) {
-      throw new Error('Division by zero');
-    }
+    if (y === 0) throw new Error('Division by zero');
     return x / y;
   },
   div: (x, y) => {
-    if (y === 0) {
-      throw new Error('Division by zero');
-    }
+    if (y === 0) throw new Error('Division by zero');
     return x / y;
   },
   '/': (x, y) => {
-    if (y === 0) {
-      throw new Error('Division by zero');
-    }
+    if (y === 0) throw new Error('Division by zero');
     return x / y;
-  }
+  },
+
+  mod: (x, y) => modulo(x, y),
+  '%': (x, y) => modulo(x, y),
+
+  pow: (x, y) => power(x, y),
+  power: (x, y) => power(x, y),
+  '**': (x, y) => power(x, y)
 };
 
-const op = command.toLowerCase();
+try {
+  if (Object.prototype.hasOwnProperty.call(unaryOps, op)) {
+    if (aArg === undefined) {
+      console.error('Error: missing operand for unary operation.');
+      printUsage();
+      process.exit(1);
+    }
+    const a = toNumber(aArg);
+    if (Number.isNaN(a)) {
+      console.error('Error: operand must be a valid number.');
+      process.exit(1);
+    }
+    const result = unaryOps[op](a);
+    console.log(result);
+    process.exit(0);
+  }
 
-if (!Object.prototype.hasOwnProperty.call(ops, op)) {
+  if (Object.prototype.hasOwnProperty.call(binaryOps, op)) {
+    if (aArg === undefined || bArg === undefined) {
+      console.error('Error: missing operands for binary operation.');
+      printUsage();
+      process.exit(1);
+    }
+    const a = toNumber(aArg);
+    const b = toNumber(bArg);
+    if (Number.isNaN(a) || Number.isNaN(b)) {
+      console.error('Error: both operands must be valid numbers.');
+      process.exit(1);
+    }
+    const result = binaryOps[op](a, b);
+    console.log(result);
+    process.exit(0);
+  }
+
   console.error(`Error: unsupported operation "${command}".`);
   printUsage();
   process.exit(1);
-}
-
-try {
-  const result = ops[op](a, b);
-  // Print numeric result to stdout for scripting compatibility
-  console.log(result);
-  // Exit 0 on success
-  process.exit(0);
 } catch (err) {
   console.error('Error:', err.message || err);
   process.exit(1);
